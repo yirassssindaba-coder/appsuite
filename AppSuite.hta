@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AppSuite</title>
+  <hta:application id="app" applicationname="AppSuite" border="thin" caption="yes" showintaskbar="yes"
+    singleinstance="yes" sysmenu="yes" windowstate="normal"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <style>
+    body { margin:0; font-family:Segoe UI, Arial; background:#0b1220; color:#eef3ff; overflow:hidden; }
+    .shell { display:flex; height:100vh; }
+    .sidebar { width:300px; background:#121a2c; border-right:1px solid #22304a; padding:18px 14px; box-sizing:border-box; }
+    .brand { font-size:18px; font-weight:900; letter-spacing:.4px; }
+    .sub { margin-top:6px; color:#b7c4dd; font-size:12.5px; line-height:1.35; }
+    .nav { margin-top:16px; }
+    .nav button { width:100%; text-align:left; background:#0b1220; color:#eef3ff; border:1px solid #2b3c5d; border-radius:12px; padding:12px 12px; font-weight:900; cursor:pointer; margin-bottom:10px; }
+    .nav button.active { background:#22c55e; color:#06111d; border-color:#22c55e; }
+    .nav .hint { color:#b7c4dd; font-size:12px; margin-top:8px; line-height:1.35; }
+    .content { flex:1; display:flex; flex-direction:column; height:100%; }
+    .topbar { padding:16px 18px; background:#121a2c; border-bottom:1px solid #22304a; display:flex; justify-content:space-between; align-items:center; }
+    .title { font-size:18px; font-weight:900; }
+    .top-actions button { margin-left:10px; }
+    button { background:#0b1220; color:#eef3ff; border:1px solid #2b3c5d; border-radius:10px; padding:10px 12px; font-weight:900; cursor:pointer; }
+    button.primary { background:#22c55e; color:#06111d; border-color:#22c55e; }
+    button.warn { background:#f59e0b; color:#06111d; border-color:#f59e0b; }
+    button.danger { background:#ef4444; color:#06111d; border-color:#ef4444; }
+    button.ghost { background:transparent; }
+    .page { flex:1; overflow:auto; padding:16px 18px; box-sizing:border-box; }
+    .grid { display:flex; gap:14px; flex-wrap:wrap; }
+    .panel { background:#121a2c; border:1px solid #22304a; border-radius:14px; padding:14px; box-sizing:border-box; }
+    .panel.small { width:440px; max-width:100%; }
+    .panel.flex { flex:1; min-width:380px; }
+    .big { font-size:54px; font-weight:900; letter-spacing:1px; text-align:center; margin:12px 0 6px; }
+    .muted { color:#b7c4dd; font-size:12px; }
+    input, textarea, select { background:#0b1220; border:1px solid #2b3c5d; border-radius:10px; color:#eef3ff; padding:9px 10px; font-family:Segoe UI, Arial; }
+    textarea { resize:vertical; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:center; margin-top:12px; }
+    .list { max-height:420px; overflow:auto; margin-top:10px; }
+    .item { padding:10px; border-bottom:1px solid #22304a; }
+    .tag { display:inline-block; margin-left:10px; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:900; background:#0b1220; border:1px solid #2b3c5d; color:#a9c4ff; }
+    .split { display:flex; gap:12px; flex-wrap:wrap; }
+    .split > .panel { flex:1; min-width:360px; }
+    .board { display:flex; gap:12px; }
+    .col { flex:1; background:#121a2c; border:1px solid #22304a; border-radius:14px; padding:12px; min-height:520px; }
+    .col h3 { margin:0 0 10px; font-size:13px; letter-spacing:.4px; color:#a9c4ff; }
+    .card { background:#0b1220; border:1px solid #2b3c5d; border-radius:12px; padding:10px 10px 8px; margin-bottom:10px; cursor:move; }
+    .card .t { font-weight:900; }
+    .card .m { color:#b7c4dd; font-size:12px; margin-top:4px; }
+    .card .btnrow { margin-top:8px; }
+    .card .btnrow button { padding:6px 8px; border-radius:9px; margin-right:8px; }
+    .mask { position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; }
+    .modal { width:560px; max-width:92vw; background:#121a2c; border:1px solid #22304a; border-radius:14px; padding:14px; }
+    .modal h2 { margin:0 0 10px; font-size:16px; }
+    .formrow { display:flex; gap:10px; flex-wrap:wrap; }
+    .formrow > div { flex:1; min-width:240px; }
+    .table { width:100%; border-collapse:collapse; margin-top:10px; }
+    .table th, .table td { border-bottom:1px solid #22304a; padding:8px; font-size:12.5px; text-align:left; }
+    .table th { color:#a9c4ff; font-weight:900; }
+    #toast { position:fixed; left:18px; bottom:16px; background:#0b1220; border:1px solid #2b3c5d; padding:10px 12px; border-radius:10px; opacity:0; transition:opacity .25s; color:#eaf1ff; font-size:12.5px; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="sidebar">
+      <div class="brand">AppSuite <span class="tag">ALL APPS</span></div>
+      <div class="sub">Semua aplikasi jadi satu: fokus, pomodoro, budget, file search, password, board, tools, CSV viewer, stopwatch.</div>
+
+      <div class="nav">
+        <button id="nav_focus" onclick="showPage('focus')" class="active">1) GoFocusFlow</button>
+        <button id="nav_pomodoro" onclick="showPage('pomodoro')">2) PomodoroPulse</button>
+        <button id="nav_budget" onclick="showPage('budget')">3) BudgetBuddy</button>
+        <button id="nav_files" onclick="showPage('files')">4) FileScout</button>
+        <button id="nav_pass" onclick="showPage('pass')">5) PasswordForge</button>
+        <button id="nav_board" onclick="showPage('board')">6) FocusBoard</button>
+        <button id="nav_tools" onclick="showPage('tools')">7) DeskMini</button>
+        <button id="nav_csv" onclick="showPage('csv')">8) CSV QuickView</button>
+        <button id="nav_stopwatch" onclick="showPage('stopwatch')">9) StopwatchX</button>
+        <div class="hint">Data tersimpan otomatis di folder <b>data</b>. Tidak perlu install runtime.</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="topbar">
+        <div class="title" id="pageTitle">GoFocusFlow</div>
+        <div class="top-actions">
+          <button onclick="openFolder(dataDir)">Open Data</button>
+          <button class="danger" onclick="factoryReset()">Factory Reset</button>
+        </div>
+      </div>
+
+      <!-- Focus -->
+      <div class="page" id="page_focus">
+        <div class="grid">
+          <div class="panel small">
+            <div style="text-align:center;font-weight:900;color:#a9c4ff;" id="fMode">FOCUS</div>
+            <div class="big" id="fTime">50:00</div>
+
+            <div class="formrow">
+              <div>
+                <div class="muted">Focus (min)</div>
+                <input id="fFocusMin" type="number" min="1" max="240" value="50" />
+              </div>
+              <div>
+                <div class="muted">Short break (min)</div>
+                <input id="fBreakMin" type="number" min="1" max="60" value="10" />
+              </div>
+            </div>
+
+            <div class="row">
+              <button class="primary" id="fStart" onclick="fStart()">START</button>
+              <button class="warn" id="fPause" onclick="fPause()" disabled>PAUSE</button>
+              <button class="danger" onclick="fReset()">RESET</button>
+            </div>
+
+            <div class="row" style="margin-top:8px;">
+              <button onclick="fSwitch('focus')">FOCUS</button>
+              <button onclick="fSwitch('break')">BREAK</button>
+              <button onclick="fSave()">SAVE LOG</button>
+            </div>
+
+            <div class="muted" style="margin-top:10px;">Log: <b>data\focusflow.json</b></div>
+          </div>
+
+          <div class="panel flex">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-weight:900;">Focus logs</div>
+              <button class="danger" style="padding:8px 10px;" onclick="fClear()">CLEAR</button>
+            </div>
+            <div class="list" id="fLogList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pomodoro -->
+      <div class="page" id="page_pomodoro" style="display:none;">
+        <div class="grid">
+          <div class="panel small">
+            <div style="text-align:center;font-weight:900;color:#a9c4ff;" id="pModeLabel">FOCUS</div>
+            <div class="big" id="pTime">25:00</div>
+
+            <div class="formrow" style="margin-top:8px;">
+              <div>
+                <div class="muted">Focus (min)</div>
+                <input id="pFocusMin" type="number" min="1" max="180" value="25" />
+              </div>
+              <div>
+                <div class="muted">Break (min)</div>
+                <input id="pBreakMin" type="number" min="1" max="60" value="5" />
+              </div>
+            </div>
+
+            <div class="row">
+              <button class="primary" id="pStart" onclick="pStart()">START</button>
+              <button class="warn" id="pPause" onclick="pPause()" disabled>PAUSE</button>
+              <button class="danger" onclick="pReset()">RESET</button>
+            </div>
+
+            <div class="row" style="margin-top:8px;">
+              <button onclick="pSwitch('focus')">FOCUS</button>
+              <button onclick="pSwitch('break')">BREAK</button>
+              <button onclick="pFinish()">FINISH SESSION</button>
+            </div>
+
+            <div class="muted" style="margin-top:10px;">Data: <b>data\sessions.json</b></div>
+          </div>
+
+          <div class="panel flex">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-weight:900;">Sessions</div>
+              <button class="danger" style="padding:8px 10px;" onclick="pClear()">CLEAR</button>
+            </div>
+            <div class="muted" style="margin-top:6px;">Klik <b>FINISH SESSION</b> untuk menyimpan.</div>
+            <div class="list" id="pSessionList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Budget -->
+      <div class="page" id="page_budget" style="display:none;">
+        <div class="split">
+          <div class="panel">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-weight:900;">Add transaction</div>
+              <button class="danger" style="padding:8px 10px;" onclick="bbClearAll()">CLEAR</button>
+            </div>
+
+            <div class="formrow" style="margin-top:10px;">
+              <div>
+                <div class="muted">Type</div>
+                <select id="bbType" style="width:100%; font-weight:900;">
+                  <option value="income">Income</option>
+                  <option value="expense">Expense</option>
+                </select>
+              </div>
+              <div>
+                <div class="muted">Amount</div>
+                <input id="bbAmount" type="number" step="0.01" value="0" />
+              </div>
+            </div>
+
+            <div class="formrow" style="margin-top:10px;">
+              <div>
+                <div class="muted">Category</div>
+                <input id="bbCategory" type="text" placeholder="e.g., Food, Transport, Salary" />
+              </div>
+              <div>
+                <div class="muted">Date</div>
+                <input id="bbDate" type="text" placeholder="YYYY-MM-DD (optional)" />
+              </div>
+            </div>
+
+            <div style="margin-top:10px;">
+              <div class="muted">Note</div>
+              <textarea id="bbNote" style="width:100%; height:64px;" placeholder="optional"></textarea>
+            </div>
+
+            <div class="row" style="justify-content:flex-start;">
+              <button class="primary" onclick="bbAdd()">ADD</button>
+              <button onclick="bbExport()">EXPORT CSV</button>
+              <button onclick="bbRender()">REFRESH</button>
+            </div>
+
+            <div class="muted">Data: <b>data\budget.json</b></div>
+          </div>
+
+          <div class="panel">
+            <div style="font-weight:900;">Summary</div>
+            <table class="table">
+              <tr><th>Total income</th><td id="bbIncome">0</td></tr>
+              <tr><th>Total expense</th><td id="bbExpense">0</td></tr>
+              <tr><th>Balance</th><td id="bbBalance">0</td></tr>
+            </table>
+            <div class="muted" style="margin-top:8px;">Latest transactions</div>
+            <div class="list" id="bbList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FileScout -->
+      <div class="page" id="page_files" style="display:none;">
+        <div class="panel">
+          <div style="font-weight:900;">Search files (local)</div>
+          <div class="muted" style="margin-top:6px;">Masukkan folder path (contoh: <b>C:\Users\ASUS\Documents</b>).</div>
+
+          <div class="formrow" style="margin-top:10px;">
+            <div>
+              <div class="muted">Folder path</div>
+              <input id="fsFolder" type="text" placeholder="C:\Users\ASUS\Documents" />
+            </div>
+            <div>
+              <div class="muted">Keyword (optional)</div>
+              <input id="fsQuery" type="text" placeholder="report" />
+            </div>
+          </div>
+
+          <div class="formrow" style="margin-top:10px;">
+            <div>
+              <div class="muted">Max results</div>
+              <input id="fsMax" type="number" min="50" max="2000" value="300" />
+            </div>
+            <div>
+              <div class="muted">Actions</div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="primary" onclick="fsRun()">SEARCH</button>
+                <button onclick="fsOpenFolder()">OPEN FOLDER</button>
+                <button class="danger" onclick="fsClear()">CLEAR</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="muted" style="margin-top:10px;">Results</div>
+          <div class="list" id="fsList"></div>
+        </div>
+      </div>
+
+      <!-- PasswordForge -->
+      <div class="page" id="page_pass" style="display:none;">
+        <div class="grid">
+          <div class="panel small">
+            <div style="font-weight:900;">Generate password</div>
+
+            <div class="formrow" style="margin-top:10px;">
+              <div>
+                <div class="muted">Length</div>
+                <input id="pwLen" type="number" min="6" max="128" value="16" />
+              </div>
+              <div>
+                <div class="muted">Preset</div>
+                <select id="pwPreset" style="width:100%; font-weight:900;" onchange="pwPreset()">
+                  <option value="strong">Strong</option>
+                  <option value="pin">PIN</option>
+                  <option value="readable">Readable</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="formrow" style="margin-top:10px;">
+              <div>
+                <div class="muted">Options</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                  <label><input type="checkbox" id="pwUpper" checked /> Upper</label>
+                  <label><input type="checkbox" id="pwLower" checked /> Lower</label>
+                  <label><input type="checkbox" id="pwDigits" checked /> Digits</label>
+                  <label><input type="checkbox" id="pwSymbols" checked /> Symbols</label>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:10px;">
+              <div class="muted">Result</div>
+              <input id="pwOut" type="text" readonly />
+            </div>
+
+            <div class="row" style="justify-content:flex-start;">
+              <button class="primary" onclick="pwGen()">GENERATE</button>
+              <button onclick="pwCopy()">COPY</button>
+            </div>
+
+            <div class="muted">History: <b>data\passwords.json</b></div>
+          </div>
+
+          <div class="panel flex">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-weight:900;">History</div>
+              <button class="danger" style="padding:8px 10px;" onclick="pwClear()">CLEAR</button>
+            </div>
+            <div class="list" id="pwList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Board -->
+      <div class="page" id="page_board" style="display:none;">
+        <div class="board">
+          <div class="col" ondragover="bAllowDrop(event)" ondrop="bDrop(event,'todo')"><h3>TO DO</h3><div id="bTodoList"></div></div>
+          <div class="col" ondragover="bAllowDrop(event)" ondrop="bDrop(event,'doing')"><h3>DOING</h3><div id="bDoingList"></div></div>
+          <div class="col" ondragover="bAllowDrop(event)" ondrop="bDrop(event,'done')"><h3>DONE</h3><div id="bDoneList"></div></div>
+        </div>
+        <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="primary" onclick="bOpenNew()">+ NEW TASK</button>
+          <button class="danger" onclick="bClearAll()">CLEAR</button>
+        </div>
+        <div class="muted" style="margin-top:8px;">Data: <b>data\tasks.json</b></div>
+      </div>
+
+      <!-- Tools -->
+      <div class="page" id="page_tools" style="display:none;">
+        <div class="split">
+          <div class="panel">
+            <div style="font-weight:900;">Quick actions</div>
+            <div class="row" style="justify-content:flex-start;">
+              <button onclick="openFolder(appDir)">Open App Folder</button>
+              <button onclick="openFolder(dataDir)">Open Data Folder</button>
+              <button onclick="toolsOpenDocs()">Open Documents</button>
+              <button onclick="toolsOpenDownloads()">Open Downloads</button>
+            </div>
+            <div class="muted" style="margin-top:8px;">System info</div>
+            <table class="table">
+              <tr><th>User</th><td id="sysUser"></td></tr>
+              <tr><th>Computer</th><td id="sysComp"></td></tr>
+              <tr><th>OS</th><td id="sysOS"></td></tr>
+            </table>
+          </div>
+
+          <div class="panel">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-weight:900;">Sticky note</div>
+              <button class="primary" style="padding:8px 10px;" onclick="noteSave()">SAVE</button>
+            </div>
+            <div class="muted" style="margin-top:6px;">Saved: <b>data\note.txt</b></div>
+            <textarea id="noteArea" style="width:100%; height:320px; margin-top:10px;" placeholder="Write something..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- CSV -->
+      <div class="page" id="page_csv" style="display:none;">
+        <div class="panel">
+          <div style="font-weight:900;">CSV QuickView</div>
+          <div class="muted" style="margin-top:6px;">Masukkan path file CSV, lalu Load. Maks 200 baris.</div>
+
+          <div class="formrow" style="margin-top:10px;">
+            <div>
+              <div class="muted">CSV file path</div>
+              <input id="csvPath" type="text" placeholder="C:\Users\ASUS\Downloads\data.csv" />
+            </div>
+            <div>
+              <div class="muted">Max rows</div>
+              <input id="csvMax" type="number" min="20" max="2000" value="200" />
+            </div>
+          </div>
+
+          <div class="row" style="justify-content:flex-start;">
+            <button class="primary" onclick="csvLoad()">LOAD</button>
+            <button onclick="csvOpen()">OPEN FILE</button>
+            <button class="danger" onclick="csvClear()">CLEAR</button>
+          </div>
+
+          <div id="csvMeta" class="muted"></div>
+          <div id="csvTableWrap" style="overflow:auto; max-height:520px; margin-top:10px;"></div>
+        </div>
+      </div>
+
+      <!-- Stopwatch -->
+      <div class="page" id="page_stopwatch" style="display:none;">
+        <div class="grid">
+          <div class="panel small">
+            <div class="big" id="sTime">00:00.00</div>
+            <div class="row">
+              <button class="primary" id="sStart" onclick="sStart()">START</button>
+              <button class="warn" id="sPause" onclick="sPause()" disabled>PAUSE</button>
+              <button class="danger" onclick="sReset()">RESET</button>
+            </div>
+            <div class="row" style="margin-top:8px;">
+              <button onclick="sLap()">LAP</button>
+              <button class="danger" onclick="sClear()">CLEAR LAPS</button>
+            </div>
+            <div class="muted" style="margin-top:10px;">Data: <b>data\laps.json</b></div>
+          </div>
+
+          <div class="panel flex">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-weight:900;">Laps</div>
+              <div class="muted" id="sLapCount">0 laps</div>
+            </div>
+            <div class="list" id="sLapList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Board modal -->
+      <div class="mask" id="mask">
+        <div class="modal">
+          <h2 id="mTitle">New Task</h2>
+          <div class="formrow">
+            <div>
+              <div class="muted">Title</div>
+              <input id="mTaskTitle" type="text" placeholder="e.g., Finish report" />
+            </div>
+            <div>
+              <div class="muted">Status</div>
+              <select id="mTaskStatus" style="width:100%;font-weight:900;">
+                <option value="todo">TO DO</option>
+                <option value="doing">DOING</option>
+                <option value="done">DONE</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:10px;">
+            <div class="muted">Notes</div>
+            <textarea id="mTaskNotes" style="width:100%;height:70px;" placeholder="Optional notes..."></textarea>
+          </div>
+          <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:10px;">
+            <button onclick="bCloseModal()">Cancel</button>
+            <button class="primary" onclick="bSaveTask()">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="toast"></div>
+    </div>
+  </div>
+
+<script>
+
+function FSO(){ return new ActiveXObject("Scripting.FileSystemObject"); }
+function Shell(){ return new ActiveXObject("WScript.Shell"); }
+function here(){
+  var p = unescape(location.pathname);
+  if (p.charAt(0)=="/" && p.indexOf(":")===2) p = p.substring(1);
+  return p.replace(/\//g,"\\");
+}
+function dirOf(p){ return FSO().GetParentFolderName(p); }
+function ensureFolder(path){ var fso=FSO(); if(!fso.FolderExists(path)) fso.CreateFolder(path); }
+function fileExists(path){ return FSO().FileExists(path); }
+function folderExists(path){ return FSO().FolderExists(path); }
+function readText(path){
+  var fso = FSO();
+  if(!fso.FileExists(path)) return "";
+  var ts = fso.OpenTextFile(path, 1, false, -1);
+  var txt = ts.ReadAll();
+  ts.Close();
+  return txt;
+}
+function writeText(path, text){
+  ensureFolder(dirOf(path));
+  var ts = FSO().OpenTextFile(path, 2, true, -1);
+  ts.Write(text);
+  ts.Close();
+}
+function jsonLoad(path, fallback){
+  try{
+    var t = readText(path);
+    if(!t) return fallback;
+    return JSON.parse(t);
+  }catch(e){ return fallback; }
+}
+function jsonSave(path, obj){
+  writeText(path, JSON.stringify(obj, null, 2));
+}
+function openFolder(path){
+  try{ Shell().Run('explorer.exe "' + path + '"', 1, false); }catch(e){}
+}
+function openFile(path){
+  try{ Shell().Run('explorer.exe "' + path + '"', 1, false); }catch(e){}
+}
+function esc(s){
+  s = (s||"");
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function toast(msg){
+  var el = document.getElementById("toast");
+  if(!el){ alert(msg); return; }
+  el.innerText = msg;
+  el.style.opacity = 1;
+  setTimeout(function(){ el.style.opacity = 0; }, 2400);
+}
+function tryCopy(txt){
+  try{
+    window.clipboardData.setData("Text", txt);
+    toast("Copied");
+    return true;
+  }catch(e){
+    toast("Copy failed (policy).");
+    return false;
+  }
+}
+function uid(prefix){
+  return (prefix||"id") + "_" + (new Date()).getTime() + "_" + Math.floor(Math.random()*1e6);
+}
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+
+function parseCSV(text){
+  var rows=[], row=[], cur="", inQ=false;
+  for(var i=0;i<text.length;i++){
+    var ch=text.charAt(i);
+    if(inQ){
+      if(ch === '"'){
+        if(i+1<text.length && text.charAt(i+1)==='"'){ cur+='"'; i++; }
+        else inQ=false;
+      } else cur += ch;
+    } else {
+      if(ch === '"'){ inQ=true; }
+      else if(ch === ','){ row.push(cur); cur=""; }
+      else if(ch === '\r'){ }
+      else if(ch === '\n'){ row.push(cur); rows.push(row); row=[]; cur=""; }
+      else cur += ch;
+    }
+  }
+  row.push(cur); rows.push(row);
+  return rows;
+}
+
+
+function scanFolder(basePath, query, maxFiles){
+  var fso = FSO();
+  var results=[];
+  query = (query||"").toLowerCase();
+  maxFiles = maxFiles || 300;
+
+  function walk(path){
+    if(results.length >= maxFiles) return;
+    var folder;
+    try{ folder = fso.GetFolder(path); }catch(e){ return; }
+
+    var files = new Enumerator(folder.Files);
+    for(; !files.atEnd(); files.moveNext()){
+      if(results.length >= maxFiles) return;
+      var f = files.item();
+      var name = (""+f.Name).toLowerCase();
+      if(!query || name.indexOf(query) >= 0){
+        results.push({type:"file", name:f.Name, path:f.Path, size:f.Size});
+      }
+    }
+
+    var subs = new Enumerator(folder.SubFolders);
+    for(; !subs.atEnd(); subs.moveNext()){
+      if(results.length >= maxFiles) return;
+      var sf = subs.item();
+      var sname = (""+sf.Name).toLowerCase();
+      if(sname==="node_modules" || sname===".git") continue;
+      walk(sf.Path);
+    }
+  }
+
+  walk(basePath);
+  return results;
+}
+
+
+/* Paths */
+var appPath = here();
+var appDir = dirOf(appPath);
+var dataDir = appDir + "\\data";
+ensureFolder(dataDir);
+
+/* Data files */
+var focusFile    = dataDir + "\\focusflow.json";
+var sessionsFile = dataDir + "\\sessions.json";
+var budgetFile   = dataDir + "\\budget.json";
+var passFile     = dataDir + "\\passwords.json";
+var tasksFile    = dataDir + "\\tasks.json";
+var noteFile     = dataDir + "\\note.txt";
+var lapsFile     = dataDir + "\\laps.json";
+
+/* Nav */
+function showPage(key){
+  var keys = ["focus","pomodoro","budget","files","pass","board","tools","csv","stopwatch"];
+  for(var i=0;i<keys.length;i++){
+    var k=keys[i];
+    document.getElementById("page_"+k).style.display = (k===key ? "" : "none");
+    document.getElementById("nav_"+k).className = (k===key ? "active" : "");
+  }
+  var titles={
+    focus:"GoFocusFlow", pomodoro:"PomodoroPulse", budget:"BudgetBuddy", files:"FileScout",
+    pass:"PasswordForge", board:"FocusBoard", tools:"DeskMini", csv:"CSV QuickView", stopwatch:"StopwatchX"
+  };
+  document.getElementById("pageTitle").innerText = titles[key] || "AppSuite";
+}
+
+/* Reset */
+function factoryReset(){
+  if(!confirm("Reset semua data (hapus semua JSON)?")) return;
+  jsonSave(focusFile, []);
+  jsonSave(sessionsFile, []);
+  jsonSave(budgetFile, []);
+  jsonSave(passFile, []);
+  jsonSave(tasksFile, []);
+  writeText(noteFile, "");
+  jsonSave(lapsFile, []);
+  initAll();
+  toast("Reset done");
+}
+
+/* ---------- 1) FocusFlow ---------- */
+var fTimer=null, fMode="focus", fRemaining=50*60, fRunning=false;
+
+function fApply(){
+  var fm=parseInt(document.getElementById("fFocusMin").value||"50",10);
+  var bm=parseInt(document.getElementById("fBreakMin").value||"10",10);
+  document.getElementById("fMode").innerText = (fMode==="focus" ? "FOCUS" : "BREAK");
+  fRemaining = (fMode==="focus"?fm:bm)*60;
+  fRender();
+}
+function fRender(){
+  var m=Math.floor(fRemaining/60), s=fRemaining%60;
+  document.getElementById("fTime").innerText=(m<10?"0":"")+m+":"+(s<10?"0":"")+s;
+}
+function fTick(){
+  if(!fRunning) return;
+  fRemaining--;
+  if(fRemaining<=0){
+    fRemaining=0; fRender(); fPause();
+    try{ Shell().Run("cmd /c echo \x07", 0, false); }catch(e){}
+    toast("FocusFlow: time is up!");
+    fMode=(fMode==="focus"?"break":"focus"); fApply();
+    return;
+  }
+  fRender();
+}
+function fStart(){
+  if(fRunning) return;
+  fRunning=true;
+  document.getElementById("fStart").disabled=true;
+  document.getElementById("fPause").disabled=false;
+  fTimer=setInterval(fTick,1000);
+}
+function fPause(){
+  fRunning=false;
+  document.getElementById("fStart").disabled=false;
+  document.getElementById("fPause").disabled=true;
+  if(fTimer){ clearInterval(fTimer); fTimer=null; }
+}
+function fReset(){ fPause(); fApply(); }
+function fSwitch(m){ fPause(); fMode=m; fApply(); }
+function fSave(){
+  var fm=parseInt(document.getElementById("fFocusMin").value||"50",10);
+  var bm=parseInt(document.getElementById("fBreakMin").value||"10",10);
+  var rec={timestamp:(new Date()).toISOString(), mode:fMode, focusMin:fm, breakMin:bm, remainingSec:fRemaining};
+  var db=jsonLoad(focusFile, []); db.unshift(rec); jsonSave(focusFile, db);
+  toast("Log saved"); fLoad();
+}
+function fClear(){ if(!confirm("Clear focus logs?")) return; jsonSave(focusFile, []); fLoad(); toast("Cleared"); }
+function fLoad(){
+  var db=jsonLoad(focusFile, []);
+  var list=document.getElementById("fLogList"); list.innerHTML="";
+  if(!db.length){ list.innerHTML='<div class="muted" style="padding:12px;">Belum ada log.</div>'; return; }
+  for(var i=0;i<db.length;i++) {
+    var r=db[i], d=new Date(r.timestamp);
+    var el=document.createElement("div"); el.className="item";
+    el.innerHTML="<b>"+(r.mode==="focus"?"Focus":"Break")+"</b> · "+d.toLocaleString()+
+      "<div class='muted'>focus "+r.focusMin+"m · break "+r.breakMin+"m · remaining "+Math.floor(r.remainingSec/60)+"m</div>";
+    list.appendChild(el);
+  }
+}
+
+/* ---------- 2) Pomodoro ---------- */
+var pTimer=null, pMode="focus", pRemaining=25*60, pRunning=false;
+function pApply(){
+  var fm=parseInt(document.getElementById("pFocusMin").value||"25",10);
+  var bm=parseInt(document.getElementById("pBreakMin").value||"5",10);
+  document.getElementById("pModeLabel").innerText=(pMode==="focus"?"FOCUS":"BREAK");
+  pRemaining=(pMode==="focus"?fm:bm)*60;
+  pRender();
+}
+function pRender(){
+  var m=Math.floor(pRemaining/60), s=pRemaining%60;
+  document.getElementById("pTime").innerText=(m<10?"0":"")+m+":"+(s<10?"0":"")+s;
+}
+function pTick(){
+  if(!pRunning) return;
+  pRemaining--;
+  if(pRemaining<=0){
+    pRemaining=0; pRender(); pPause();
+    try{ Shell().Run("cmd /c echo \x07", 0, false); }catch(e){}
+    toast("Pomodoro: time is up!");
+    pMode=(pMode==="focus"?"break":"focus"); pApply();
+    return;
+  }
+  pRender();
+}
+function pStart(){
+  if(pRunning) return;
+  pRunning=true;
+  document.getElementById("pStart").disabled=true;
+  document.getElementById("pPause").disabled=false;
+  pTimer=setInterval(pTick,1000);
+}
+function pPause(){
+  pRunning=false;
+  document.getElementById("pStart").disabled=false;
+  document.getElementById("pPause").disabled=true;
+  if(pTimer){ clearInterval(pTimer); pTimer=null; }
+}
+function pReset(){ pPause(); pApply(); }
+function pSwitch(m){ pPause(); pMode=m; pApply(); }
+function pFinish(){
+  var fm=parseInt(document.getElementById("pFocusMin").value||"25",10);
+  var bm=parseInt(document.getElementById("pBreakMin").value||"5",10);
+  var rec={timestamp:(new Date()).toISOString(), mode:pMode, focusMin:fm, breakMin:bm, remainingSec:pRemaining};
+  var db=jsonLoad(sessionsFile, []); db.unshift(rec); jsonSave(sessionsFile, db);
+  toast("Session saved"); pLoad();
+}
+function pClear(){ if(!confirm("Clear sessions?")) return; jsonSave(sessionsFile, []); pLoad(); toast("Cleared"); }
+function pLoad(){
+  var db=jsonLoad(sessionsFile, []);
+  var list=document.getElementById("pSessionList"); list.innerHTML="";
+  if(!db.length){ list.innerHTML='<div class="muted" style="padding:12px;">Belum ada sesi.</div>'; return; }
+  for(var i=0;i<db.length;i++) {
+    var r=db[i], d=new Date(r.timestamp);
+    var el=document.createElement("div"); el.className="item";
+    el.innerHTML="<b>"+(r.mode==="focus"?"Focus":"Break")+"</b> · "+d.toLocaleString()+
+      "<div class='muted'>focus "+r.focusMin+"m · break "+r.breakMin+"m · remaining "+Math.floor(r.remainingSec/60)+"m</div>";
+    list.appendChild(el);
+  }
+}
+
+/* ---------- 3) Budget ---------- */
+function bbLoad(){ return jsonLoad(budgetFile, []); }
+function bbSave(db){ jsonSave(budgetFile, db); }
+function bbAdd(){
+  var t=document.getElementById("bbType").value;
+  var amt=parseFloat(document.getElementById("bbAmount").value||"0");
+  if(isNaN(amt) || amt<=0){ toast("Amount must be > 0"); return; }
+  var cat=(document.getElementById("bbCategory").value||"").trim();
+  if(!cat) cat = (t==="income" ? "Income" : "Expense");
+  var date=(document.getElementById("bbDate").value||"").trim();
+  if(!date){
+    var d=new Date(); date = d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);
+  }
+  var note=(document.getElementById("bbNote").value||"").trim();
+  var db=bbLoad();
+  db.unshift({id:uid("tx"), type:t, amount:amt, category:cat, date:date, note:note, ts:(new Date()).toISOString()});
+  bbSave(db);
+  document.getElementById("bbAmount").value="0";
+  document.getElementById("bbCategory").value="";
+  document.getElementById("bbDate").value="";
+  document.getElementById("bbNote").value="";
+  toast("Saved"); bbRender();
+}
+function bbRender(){
+  var db=bbLoad();
+  var inc=0, exp=0;
+  for(var i=0;i<db.length;i++){
+    if(db[i].type==="income") inc += Number(db[i].amount||0);
+    else exp += Number(db[i].amount||0);
+  }
+  document.getElementById("bbIncome").innerText = inc.toFixed(2);
+  document.getElementById("bbExpense").innerText = exp.toFixed(2);
+  document.getElementById("bbBalance").innerText = (inc-exp).toFixed(2);
+
+  var list=document.getElementById("bbList"); list.innerHTML="";
+  if(!db.length){ list.innerHTML='<div class="muted" style="padding:12px;">Belum ada transaksi.</div>'; return; }
+  for(var j=0;j<Math.min(db.length, 100); j++){
+    var r=db[j];
+    var el=document.createElement("div"); el.className="item";
+    el.innerHTML = "<b>"+esc(r.type.toUpperCase())+"</b> · "+esc(r.date)+" · "+esc(r.category)+" · <b>"+Number(r.amount).toFixed(2)+"</b>" +
+                   (r.note ? "<div class='muted'>"+esc(r.note)+"</div>" : "");
+    list.appendChild(el);
+  }
+}
+function bbClearAll(){
+  if(!confirm("Clear ALL budget transactions?")) return;
+  bbSave([]); bbRender(); toast("Cleared");
+}
+function bbExport(){
+  var db=bbLoad();
+  if(!db.length){ toast("No data"); return; }
+  var lines=["type,amount,category,date,note"];
+  for(var i=0;i<db.length;i++){
+    var r=db[i];
+    var note=(r.note||"").replace(/"/g,'""');
+    var cat=(r.category||"").replace(/"/g,'""');
+    lines.push(r.type+","+r.amount+',"'+cat+'","'+r.date+'","'+note+'"');
+  }
+  var out = dataDir + "\\budget_export.csv";
+  writeText(out, lines.join("\r\n"));
+  openFile(out);
+  toast("Exported: budget_export.csv");
+}
+
+/* ---------- 4) FileScout ---------- */
+var fsLast=[];
+function fsOpenFolder(){
+  var p=(document.getElementById("fsFolder").value||"").trim();
+  if(!p){ toast("Folder path required"); return; }
+  openFolder(p);
+}
+function fsClear(){ fsLast=[]; document.getElementById("fsList").innerHTML=""; }
+function fsOpen(i){
+  if(i>=0 && i<fsLast.length) openFile(fsLast[i].path);
+}
+function fsRun(){
+  var base=(document.getElementById("fsFolder").value||"").trim();
+  if(!base){ toast("Folder path required"); return; }
+  if(!folderExists(base)){ toast("Folder not found"); return; }
+  var q=(document.getElementById("fsQuery").value||"").trim();
+  var max=parseInt(document.getElementById("fsMax").value||"300",10);
+  max=clamp(max, 50, 2000);
+  toast("Scanning...");
+  fsLast=scanFolder(base, q, max);
+  var list=document.getElementById("fsList"); list.innerHTML="";
+  if(!fsLast.length){ list.innerHTML='<div class="muted" style="padding:12px;">No result.</div>'; return; }
+  for(var i=0;i<fsLast.length;i++){
+    var r=fsLast[i];
+    var el=document.createElement("div"); el.className="item";
+    el.innerHTML = "<b>"+esc(r.name)+"</b><div class='muted'>"+esc(r.path)+"</div>" +
+                   "<div style='margin-top:6px;'><button class='ghost' onclick='fsOpen("+i+")'>Open</button></div>";
+    list.appendChild(el);
+  }
+  toast("Done: "+fsLast.length+" results");
+}
+
+/* ---------- 5) PasswordForge ---------- */
+var pwLast=[];
+function pwPreset(){
+  var p=document.getElementById("pwPreset").value;
+  if(p==="pin"){
+    document.getElementById("pwLen").value = 6;
+    document.getElementById("pwUpper").checked=false;
+    document.getElementById("pwLower").checked=false;
+    document.getElementById("pwDigits").checked=true;
+    document.getElementById("pwSymbols").checked=false;
+  } else if(p==="readable"){
+    document.getElementById("pwLen").value = 14;
+    document.getElementById("pwUpper").checked=true;
+    document.getElementById("pwLower").checked=true;
+    document.getElementById("pwDigits").checked=false;
+    document.getElementById("pwSymbols").checked=false;
+  } else {
+    document.getElementById("pwLen").value = 16;
+    document.getElementById("pwUpper").checked=true;
+    document.getElementById("pwLower").checked=true;
+    document.getElementById("pwDigits").checked=true;
+    document.getElementById("pwSymbols").checked=true;
+  }
+}
+function pwGen(){
+  var len=parseInt(document.getElementById("pwLen").value||"16",10);
+  len=clamp(len, 6, 128);
+  var sets=[];
+  if(document.getElementById("pwUpper").checked) sets.push("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+  if(document.getElementById("pwLower").checked) sets.push("abcdefghijklmnopqrstuvwxyz");
+  if(document.getElementById("pwDigits").checked) sets.push("0123456789");
+  if(document.getElementById("pwSymbols").checked) sets.push("!@#$%^&*()-_=+[]{};:,.?/");
+
+  if(!sets.length){ toast("Select at least 1 option"); return; }
+  var out=[];
+  function randInt(n){ return Math.floor(Math.random()*n); }
+  for(var i=0;i<sets.length;i++){
+    var s=sets[i]; out.push(s.charAt(randInt(s.length)));
+  }
+  var all=sets.join("");
+  while(out.length < len) out.push(all.charAt(randInt(all.length)));
+  for(var j=out.length-1;j>0;j--){ var k=randInt(j+1), tmp=out[j]; out[j]=out[k]; out[k]=tmp; }
+  var pw=out.join("");
+  document.getElementById("pwOut").value=pw;
+
+  var db=jsonLoad(passFile, []);
+  db.unshift({ts:(new Date()).toISOString(), value:pw, len:len});
+  jsonSave(passFile, db);
+  pwLoad();
+}
+function pwCopy(){
+  var pw=document.getElementById("pwOut").value||"";
+  if(!pw){ toast("Generate first"); return; }
+  tryCopy(pw);
+}
+function pwCopyAt(i){
+  if(i>=0 && i<pwLast.length) tryCopy(pwLast[i].value);
+}
+function pwClear(){ if(!confirm("Clear password history?")) return; jsonSave(passFile, []); pwLoad(); toast("Cleared"); }
+function pwLoad(){
+  pwLast=jsonLoad(passFile, []);
+  var list=document.getElementById("pwList"); list.innerHTML="";
+  if(!pwLast.length){ list.innerHTML='<div class="muted" style="padding:12px;">No history.</div>'; return; }
+  for(var i=0;i<Math.min(pwLast.length, 80);i++){
+    var r=pwLast[i], d=new Date(r.ts);
+    var el=document.createElement("div"); el.className="item";
+    el.innerHTML="<b>"+esc(r.value)+"</b> <span class='muted' style='margin-left:8px;'>("+r.len+")</span>" +
+      "<div class='muted'>"+d.toLocaleString()+"</div>" +
+      "<div style='margin-top:6px;'><button class='ghost' onclick='pwCopyAt("+i+")'>Copy</button></div>";
+    list.appendChild(el);
+  }
+}
+
+/* ---------- 6) FocusBoard ---------- */
+var boardDb=[], boardEditing=null, boardDragId=null;
+function bLoad(){ boardDb = jsonLoad(tasksFile, []); bRender(); }
+function bSave(){ jsonSave(tasksFile, boardDb); }
+function bRender(){
+  var todo=document.getElementById("bTodoList"), doing=document.getElementById("bDoingList"), done=document.getElementById("bDoneList");
+  todo.innerHTML=""; doing.innerHTML=""; done.innerHTML="";
+  for(var i=0;i<boardDb.length;i++){
+    var t=boardDb[i];
+    var el=document.createElement("div"); el.className="card";
+    el.setAttribute("draggable","true"); el.setAttribute("data-id", t.id);
+    el.ondragstart=function(e){ bDragStart(e, this.getAttribute("data-id")); };
+    el.innerHTML="<div class='t'>"+esc(t.title)+"</div><div class='m'>"+esc(t.notes||"")+"</div>" +
+      "<div class='btnrow'><button onclick='bEdit(\""+t.id+"\")'>Edit</button>" +
+      "<button class='danger' onclick='bDel(\""+t.id+"\")'>Delete</button></div>";
+    if(t.status==="todo") todo.appendChild(el);
+    else if(t.status==="doing") doing.appendChild(el);
+    else done.appendChild(el);
+  }
+}
+function bOpenNew(){
+  boardEditing=null;
+  document.getElementById("mTitle").innerText="New Task";
+  document.getElementById("mTaskTitle").value="";
+  document.getElementById("mTaskNotes").value="";
+  document.getElementById("mTaskStatus").value="todo";
+  document.getElementById("mask").style.display="flex";
+  document.getElementById("mTaskTitle").focus();
+}
+function bEdit(id){
+  var t=bFind(id); if(!t) return;
+  boardEditing=id;
+  document.getElementById("mTitle").innerText="Edit Task";
+  document.getElementById("mTaskTitle").value=t.title;
+  document.getElementById("mTaskNotes").value=t.notes||"";
+  document.getElementById("mTaskStatus").value=t.status;
+  document.getElementById("mask").style.display="flex";
+}
+function bCloseModal(){ document.getElementById("mask").style.display="none"; }
+function bSaveTask(){
+  var title=(document.getElementById("mTaskTitle").value||"").trim();
+  var notes=(document.getElementById("mTaskNotes").value||"").trim();
+  var status=document.getElementById("mTaskStatus").value;
+  if(!title){ toast("Title is required"); return; }
+  if(boardEditing){
+    var t=bFind(boardEditing); if(!t) return;
+    t.title=title; t.notes=notes; t.status=status; t.updatedAt=(new Date()).toISOString();
+    toast("Updated");
+  } else {
+    boardDb.unshift({id:uid("task"), title:title, notes:notes, status:status, createdAt:(new Date()).toISOString(), updatedAt:(new Date()).toISOString()});
+    toast("Added");
+  }
+  bSave(); bRender(); bCloseModal();
+}
+function bFind(id){ for(var i=0;i<boardDb.length;i++) if(boardDb[i].id===id) return boardDb[i]; return null; }
+function bDel(id){
+  if(!confirm("Delete this task?")) return;
+  var out=[]; for(var i=0;i<boardDb.length;i++) if(boardDb[i].id!==id) out.push(boardDb[i]);
+  boardDb=out; bSave(); bRender(); toast("Deleted");
+}
+function bClearAll(){
+  if(!confirm("Clear all tasks?")) return;
+  boardDb=[]; bSave(); bRender(); toast("Cleared");
+}
+function bDragStart(e, id){ boardDragId=id; try{ e.dataTransfer.setData("text", id);}catch(err){} }
+function bAllowDrop(e){ e.preventDefault(); }
+function bDrop(e, status){
+  e.preventDefault();
+  var id=boardDragId;
+  try{ id=e.dataTransfer.getData("text")||boardDragId; }catch(err){}
+  var t=bFind(id); if(!t) return;
+  t.status=status; t.updatedAt=(new Date()).toISOString();
+  bSave(); bRender(); toast("Moved");
+}
+
+/* ---------- 7) DeskMini ---------- */
+function toolsInit(){
+  try{
+    document.getElementById("sysUser").innerText = Shell().ExpandEnvironmentStrings("%USERNAME%");
+    document.getElementById("sysComp").innerText = Shell().ExpandEnvironmentStrings("%COMPUTERNAME%");
+    document.getElementById("sysOS").innerText = Shell().RegRead("HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProductName");
+  }catch(e){
+    document.getElementById("sysOS").innerText = "Windows";
+  }
+  document.getElementById("noteArea").value = readText(noteFile);
+}
+function noteSave(){ writeText(noteFile, document.getElementById("noteArea").value||""); toast("Saved"); }
+function toolsOpenDocs(){ try{ Shell().Run("explorer.exe shell:Personal", 1, false);}catch(e){} }
+function toolsOpenDownloads(){ try{ Shell().Run("explorer.exe shell:Downloads", 1, false);}catch(e){} }
+
+/* ---------- 8) CSV QuickView ---------- */
+function csvOpen(){
+  var p=(document.getElementById("csvPath").value||"").trim();
+  if(!p){ toast("CSV path required"); return; }
+  openFile(p);
+}
+function csvClear(){ document.getElementById("csvMeta").innerText=""; document.getElementById("csvTableWrap").innerHTML=""; }
+function csvLoad(){
+  var p=(document.getElementById("csvPath").value||"").trim();
+  if(!p){ toast("CSV path required"); return; }
+  if(!fileExists(p)){ toast("File not found"); return; }
+  var max=parseInt(document.getElementById("csvMax").value||"200",10);
+  max=clamp(max, 20, 2000);
+  var text=readText(p);
+  var rows=parseCSV(text);
+  if(!rows.length){ toast("Empty"); return; }
+  var header=rows[0];
+  var body=rows.slice(1, 1+max);
+  document.getElementById("csvMeta").innerText = "Rows: " + (rows.length-1) + " | Showing: " + body.length + " | Cols: " + header.length;
+
+  var html='<table class="table"><thead><tr>';
+  for(var c=0;c<header.length;c++) html += '<th>'+esc(header[c]||("col"+(c+1)))+'</th>';
+  html += '</tr></thead><tbody>';
+  for(var r=0;r<body.length;r++){
+    html += '<tr>';
+    for(var c2=0;c2<header.length;c2++){
+      html += '<td>'+esc(body[r][c2]||"")+'</td>';
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  document.getElementById("csvTableWrap").innerHTML = html;
+  toast("Loaded");
+}
+
+/* ---------- 9) Stopwatch ---------- */
+var sRunning=false, sT0=0, sElapsed=0, sTimer=null, sLaps=[];
+function sNow(){ return (new Date()).getTime(); }
+function sFmt(ms){
+  var total=ms;
+  var min=Math.floor(total/60000); total%=60000;
+  var sec=Math.floor(total/1000); total%=1000;
+  var cs=Math.floor(total/10);
+  return (min<10?"0":"")+min+":"+(sec<10?"0":"")+sec+"."+(cs<10?"0":"")+cs;
+}
+function sRenderTime(ms){ document.getElementById("sTime").innerText=sFmt(ms); }
+function sTick(){ if(!sRunning) return; sRenderTime(sElapsed+(sNow()-sT0)); }
+function sStart(){
+  if(sRunning) return;
+  sRunning=true; sT0=sNow();
+  document.getElementById("sStart").disabled=true;
+  document.getElementById("sPause").disabled=false;
+  sTimer=setInterval(sTick, 30);
+}
+function sPause(){
+  if(!sRunning) return;
+  sRunning=false;
+  sElapsed += (sNow()-sT0);
+  if(sTimer){ clearInterval(sTimer); sTimer=null; }
+  document.getElementById("sStart").disabled=false;
+  document.getElementById("sPause").disabled=true;
+  sRenderTime(sElapsed);
+}
+function sReset(){
+  sRunning=false;
+  if(sTimer){ clearInterval(sTimer); sTimer=null; }
+  sElapsed=0; sT0=0;
+  document.getElementById("sStart").disabled=false;
+  document.getElementById("sPause").disabled=true;
+  sRenderTime(0);
+  toast("Reset");
+}
+function sLap(){
+  var ms=sElapsed+(sRunning?(sNow()-sT0):0);
+  var rec={t:(new Date()).toISOString(), ms:ms};
+  sLaps.unshift(rec);
+  jsonSave(lapsFile, sLaps);
+  sRenderLaps();
+  toast("Lap saved");
+}
+function sClear(){
+  if(!confirm("Clear all laps?")) return;
+  sLaps=[];
+  jsonSave(lapsFile, sLaps);
+  sRenderLaps();
+  toast("Cleared");
+}
+function sLoad(){
+  sLaps=jsonLoad(lapsFile, []);
+  sRenderLaps();
+  sRenderTime(0);
+}
+function sRenderLaps(){
+  document.getElementById("sLapCount").innerText = sLaps.length + " laps";
+  var list=document.getElementById("sLapList"); list.innerHTML="";
+  if(!sLaps.length){ list.innerHTML='<div class="muted" style="padding:12px;">Belum ada lap.</div>'; return; }
+  for(var i=0;i<Math.min(sLaps.length, 200);i++){
+    var r=sLaps[i], d=new Date(r.t);
+    var el=document.createElement("div"); el.className="item";
+    el.innerHTML="<b>#"+(sLaps.length-i)+"</b> · "+sFmt(r.ms)+"<div class='muted'>"+d.toLocaleString()+"</div>";
+    list.appendChild(el);
+  }
+}
+
+/* Init */
+function initAll(){
+  if(readText(focusFile)==="") jsonSave(focusFile, []);
+  if(readText(sessionsFile)==="") jsonSave(sessionsFile, []);
+  if(readText(budgetFile)==="") jsonSave(budgetFile, []);
+  if(readText(passFile)==="") jsonSave(passFile, []);
+  if(readText(tasksFile)==="") jsonSave(tasksFile, []);
+  if(readText(lapsFile)==="") jsonSave(lapsFile, []);
+  if(!fileExists(noteFile)) writeText(noteFile, "");
+
+  fApply(); fLoad();
+  pApply(); pLoad();
+  bbRender();
+  pwLoad();
+  bLoad();
+  toolsInit();
+  sLoad();
+}
+
+window.onload = function(){
+  initAll();
+  showPage("focus");
+};
+</script>
+</body>
+</html>
